@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.signal import find_peaks
+from scipy import ndimage
 import matplotlib.pyplot as plt
 
 def main():
@@ -24,15 +25,25 @@ def main():
     radar_raw_data_cube_range_velocity_fft_mag_avg_db = \
         10*np.log10(np.mean(np.abs(radar_raw_data_cube_range_velocity_fft)**2, axis=0))
     
-    freq_x = (np.fft.fftshift(np.fft.fftfreq(int(num_samp_per_chirp))) + 0.5) *\
-                 num_samp_per_chirp # Frequency values for y-axis
-    freq_y = np.fft.fftshift(np.fft.fftfreq(int(num_chirp_per_frame))) *\
-                    num_chirp_per_frame  # Frequency values for x-axis
-    freq_x = freq_x*f_s*c_air/(num_samp_per_chirp*2*slew_rate)
-    freq_y = freq_y*wavelength/(num_chirp_per_frame*2*chirp_duration)
+     # Frequency values for y-axis
+    freq_x = (np.fft.fftshift(np.fft.fftfreq(int(num_samp_per_chirp))) + 0.5)
+    freq_x = freq_x*f_s*c_air/(2*slew_rate)
+
+    # Frequency values for x-axis
+    freq_y = np.fft.fftshift(np.fft.fftfreq(int(num_chirp_per_frame)))
+    freq_y = freq_y*wavelength/(2*chirp_duration)
 
     print('Max. Range :', f_s*c_air/(2*slew_rate))
     print('Max. Velocity :', wavelength/(4*chirp_duration))
+
+    tmp = radar_raw_data_cube_range_velocity_fft_mag_avg_db.flatten()
+    peaks,_ = find_peaks(tmp, np.percentile(tmp, 99.6))
+    peaks_y_idx = np.floor(peaks//num_samp_per_chirp)
+    peaks_x_idx = peaks - num_samp_per_chirp*peaks_y_idx
+    for n in range(len(peaks)):
+        print('[', n, '] : (', freq_x[peaks_x_idx[n]], ',', \
+              freq_y[peaks_y_idx[n]], ') : ',\
+                radar_raw_data_cube_range_velocity_fft_mag_avg_db[peaks_y_idx[n], peaks_x_idx[n]])
 
     plt.figure()
     plt.imshow(radar_raw_data_cube_range_velocity_fft_mag_avg_db, \
