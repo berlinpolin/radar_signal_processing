@@ -18,8 +18,8 @@ def main():
     wavelength = c_air/dataset['carrier_freq']                 # carrier wavelength (m)
     antenna_spacing = wavelength/2                             # distance of adjacent antennas
 
-    find_maximum = 0
-    plot_range_velocity = 0
+    find_maximum = 1
+    plot_range_velocity = 1
     plot_doa = 1
 
     radar_raw_data_cube_range_velocity_fft = \
@@ -43,7 +43,7 @@ def main():
     if find_maximum:
         tmp = radar_raw_data_cube_range_velocity_fft_mag_avg_db.flatten()
         peaks = np.argmax(tmp)
-        peaks_y_idx = np.floor(peaks//num_samp_per_chirp)
+        peaks_y_idx = int(np.floor(peaks//num_samp_per_chirp))
         peaks_x_idx = peaks - num_samp_per_chirp*peaks_y_idx
         print('(', freq_x[peaks_x_idx], ',', freq_y[peaks_y_idx], ') : ',\
                     radar_raw_data_cube_range_velocity_fft_mag_avg_db[peaks_y_idx, peaks_x_idx])
@@ -53,16 +53,16 @@ def main():
         peaks_y_idx = np.floor(peaks//num_samp_per_chirp)
         peaks_x_idx = peaks - num_samp_per_chirp*peaks_y_idx
         for n in range(len(peaks)):
-            print('[', n, '] : (', freq_x[peaks_x_idx[n]], ',', \
-                freq_y[peaks_y_idx[n]], ') : ',\
-                    radar_raw_data_cube_range_velocity_fft_mag_avg_db[peaks_y_idx[n], peaks_x_idx[n]])
+            print('[', n, '] : (', freq_x[int(peaks_x_idx[n])], ',', \
+                freq_y[int(peaks_y_idx[n])], ') : ',\
+                    radar_raw_data_cube_range_velocity_fft_mag_avg_db[int(peaks_y_idx[n]), int(peaks_x_idx[n])])
 
     if find_maximum:
         target_x_idx = peaks_x_idx
         target_y_idx = peaks_y_idx
     else:
-        target_x_idx = peaks_x_idx[11]
-        target_y_idx = peaks_y_idx[11]
+        target_x_idx = int(peaks_x_idx[11])
+        target_y_idx = int(peaks_y_idx[11])
 
     doa_fft = np.fft.fft(radar_raw_data_cube_range_velocity_fft[:, target_y_idx, target_x_idx])
     doa_fft = np.fft.fftshift(doa_fft)
@@ -80,7 +80,6 @@ def main():
         plt.xlabel("Range (m)")
         plt.ylabel("Velocity (m/s)")
         plt.title("Range-Velocity Map")
-        plt.show()
 
     if plot_doa:
         plt.figure()
@@ -88,6 +87,8 @@ def main():
         plt.plot(freq_doa, doa_fft_mag_db)
         plt.ylim((0,130))
         plt.grid(True)
+        
+    if plot_range_velocity or plot_doa:
         plt.show()
 
 if __name__ == "__main__":
