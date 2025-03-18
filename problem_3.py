@@ -30,15 +30,19 @@ def manifold_matrix(
 
 
 def main():
-    s = np.loadtxt("data/problem_3/s_single_target.txt", dtype=np.complex_)
+    r = np.loadtxt("data/problem_3/array_elem_pos_mm.txt", dtype=np.double) / 1e3
+    # s = np.loadtxt("data/problem_3/s_single_target.txt", dtype=np.complex_)
+    s = np.loadtxt("data/problem_3/s_multi_target.txt", dtype=np.complex_)
     wavelength = 0.00389  # m
     theta_fov = 120  # degree
+    n_grid = 480
+    inc = theta_fov / n_grid
 
-    theta = np.arange(theta_fov + 1) - 60
+    theta = np.arange(n_grid + 1) * inc - 60
     num_element = len(s)
-    r = np.arange(num_element) * wavelength / 2
+    # r = np.arange(num_element) * wavelength / 2
     map = manifold_matrix(wavelength, r, theta, num_element)
-    mag = np.abs((map.conj().T) @ s) ** 2
+    mag = 20*np.log10(np.abs((map.conj().T) @ s))
 
     plt.figure()
     plt.semilogy(theta, mag)
